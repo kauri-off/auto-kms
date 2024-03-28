@@ -17,7 +17,7 @@ use std::{thread, time::Duration};
 
 const DELAY: u64 = 5;
 
-const versions: [(&str, &str); 32] = [
+const VERSIONS: [(&str, &str); 32] = [
     ("Windows [10/11] Pro", "W269N-WFGWX-YVC9B-4J6C9-T83GX"),
     ("Windows [10/11] Pro N",	"MH37W-N47XK-V7XM9-C7227-GCQG9"),
     ("Windows [10/11] Pro for Workstations",	"NRG8B-VKK3Q-CXVCJ-9G2XF-6Q84J"),
@@ -52,26 +52,26 @@ const versions: [(&str, &str); 32] = [
     ("Windows Vista Enterprise N",	"VTC42-BM838-43QHV-84HX6-XJXKV"),
 ];
 
-pub struct WIN_VER {
+pub struct WinVer {
     version: String,
     gvlk_key: String
 }
 
-impl WIN_VER {
-    pub fn get() -> WIN_VER {
-        let user_choice = WIN_VER::get_user_choice();
-        match WIN_VER::get_by_index(user_choice - 1) {
-            Some(T) => {
-                return T;
+impl WinVer {
+    pub fn get() -> WinVer {
+        let user_choice = WinVer::get_user_choice();
+        match WinVer::get_by_index(user_choice - 1) {
+            Some(t) => {
+                return t;
             },
-            None => WIN_VER::get(),
+            None => WinVer::get(),
         }
     }
 
-    pub fn get_by_index(i: usize) -> Option<WIN_VER> {
-        let ver = versions.get(i)?;
-        println!("Selected {:?}", ver.0);
-        Some(WIN_VER {
+    pub fn get_by_index(i: usize) -> Option<WinVer> {
+        let ver = VERSIONS.get(i)?;
+        println!("Selected {}", ver.0);
+        Some(WinVer {
             version: ver.0.to_string(),
             gvlk_key: ver.1.to_string()
         })
@@ -79,13 +79,13 @@ impl WIN_VER {
 
     fn print_me() {
         pretty_print("Select your windows version\n\n", DELAY);
-        for (index, version) in versions.iter().enumerate() {
-            println!("{}. {:#?}", index + 1, version.0);
+        for (index, version) in VERSIONS.iter().enumerate() {
+            println!("{}. {}", index + 1, version.0);
         }
     }
 
     fn get_user_choice() -> usize {
-        WIN_VER::print_me();
+        WinVer::print_me();
         let choice = pretty_input("Please enter a number: ", DELAY).trim().parse().expect("Error");
         choice
     }
@@ -109,7 +109,8 @@ impl SERVER {
     }
 }
 
-pub fn activate(win_ver: &WIN_VER, server: &SERVER) -> Result<(), Error> {
+pub fn activate(win_ver: &WinVer, server: &SERVER) -> Result<(), Error> {
+    pretty_print(&format!("Cracking: {}\n\n", win_ver.version), DELAY);
     pretty_print("[/] Key set", DELAY);
     Command::new("C:\\Windows\\System32\\cscript")
         .arg("C:\\Windows\\System32\\slmgr.vbs")
