@@ -7,3 +7,8 @@ edition = "2021"
 
 [dependencies]
 console = "0.15.8"
+winapi = "0.3.8"
+libc = "0.2.66"
+
+[target.'cfg(windows)'.dependencies]
+winapi = {version = "0.3.8", features = ["winuser", "handleapi", "processthreadsapi", "securitybaseapi"]}

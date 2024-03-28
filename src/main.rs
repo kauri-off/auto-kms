@@ -1,4 +1,4 @@
-use auto_kms::{activate, pretty_input, pretty_print, SERVER, WIN_VER};
+use auto_kms::{activate, has_admin_privileges, pretty_input, pretty_print, SERVER, WIN_VER};
 
 
 fn print_menu() {
@@ -11,6 +11,10 @@ fn print_menu() {
 }
 
 fn main() {
+    if !has_admin_privileges() {
+        pretty_input("Restart the program with administrator rights", 20);
+        return;
+    }
     while true {
         print_menu();
         match pretty_input("Select: ", 5).trim() {
@@ -25,7 +29,7 @@ fn main() {
 }
 
 fn fast_activate() {
-    let ver = WIN_VER::WINDOWS_10_11_PRO;
+    let ver = WIN_VER::get_by_index(0).unwrap();
     let server = SERVER{ip: "kdavp.mooo.com".to_string()};
 
     match activate(&ver, &server) {
