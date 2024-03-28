@@ -38,7 +38,6 @@ fn fast_activate() {
             println!("{}", e)
         },
     };
-    pretty_input("Complete", 50);
 }
 
 fn activate_windows() {
@@ -51,5 +50,4 @@ fn activate_windows() {
             println!("{}", e)
         },
     };
-    pretty_input("Complete", 50);
 }

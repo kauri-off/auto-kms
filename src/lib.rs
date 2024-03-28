@@ -110,27 +110,46 @@ impl SERVER {
 }
 
 pub fn activate(win_ver: &WinVer, server: &SERVER) -> Result<(), Error> {
-    pretty_print(&format!("Cracking: {}\n\n", win_ver.version), DELAY);
-    pretty_print("[/] Key set", DELAY);
-    Command::new("C:\\Windows\\System32\\cscript")
+    pretty_print(&format!("\nCracking: {}\n\n", win_ver.version), DELAY);
+    pretty_print("[/] Setting key:", DELAY);
+    let ipk = Command::new("C:\\Windows\\System32\\cscript")
         .arg("C:\\Windows\\System32\\slmgr.vbs")
         .args(&["/ipk", &win_ver.gvlk_key])
         .output()?;
-    pretty_print(" success\n\n", DELAY);
 
-    pretty_print("[/] KMS Server set", DELAY);
-    Command::new("C:\\Windows\\System32\\cscript")
+
+    if ipk.status.success() {
+        pretty_print(" success\n\n", DELAY);
+    } else {
+        pretty_input(&format!(" Error: {:?}", ipk.status.code().unwrap()), DELAY);
+        return Ok(());
+    }
+
+    pretty_print("[/] Setting KMS Server:", DELAY);
+    let skms = Command::new("C:\\Windows\\System32\\cscript")
         .arg("C:\\Windows\\System32\\slmgr.vbs")
         .args(&["/skms", &server.address()])
         .output()?;
-    pretty_print(" success\n\n", DELAY);
-    
-    pretty_print("[/] Activating windows ", DELAY);
 
-    Command::new("C:\\Windows\\System32\\cscript")
+    if skms.status.success() {
+        pretty_print(" success\n\n", DELAY);
+    } else {
+        pretty_input(&format!(" Error: {:?}", skms.status.code().unwrap()), DELAY);
+        return Ok(());
+    }
+
+    pretty_print("[/] Activating windows:", DELAY);
+
+    let ato = Command::new("C:\\Windows\\System32\\cscript")
         .arg("C:\\Windows\\System32\\slmgr.vbs")
         .args(&["/ato"])
         .output()?;
+
+    if ato.status.success() {
+        pretty_print(" Complete", 50);
+    } else {
+        pretty_input(&format!(" Error: {:?}", ato.status.code().unwrap()), DELAY);
+    }
 
     Ok(())
 }
