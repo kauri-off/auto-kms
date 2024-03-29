@@ -111,7 +111,7 @@ impl SERVER {
 
 pub fn activate(win_ver: &WinVer, server: &SERVER) -> Result<(), Error> {
     pretty_print(&format!("\nCracking: {}\n\n", win_ver.version), DELAY);
-    pretty_print("[/] Setting key:", DELAY);
+    pretty_print("[/] Installing key:", DELAY);
     let ipk = Command::new("C:\\Windows\\System32\\cscript")
         .arg("C:\\Windows\\System32\\slmgr.vbs")
         .args(&["/ipk", &win_ver.gvlk_key])
@@ -125,7 +125,7 @@ pub fn activate(win_ver: &WinVer, server: &SERVER) -> Result<(), Error> {
         return Ok(());
     }
 
-    pretty_print("[/] Setting KMS Server:", DELAY);
+    pretty_print("[/] Installing KMS Server:", DELAY);
     let skms = Command::new("C:\\Windows\\System32\\cscript")
         .arg("C:\\Windows\\System32\\slmgr.vbs")
         .args(&["/skms", &server.address()])
