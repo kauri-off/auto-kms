@@ -1,0 +1,30 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: stable
+
+    - uses: actions/checkout@v4
+    - name: Build
+      run: cargo build --release
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: auto_kms
+        path: target/release/auto_kms.exe
