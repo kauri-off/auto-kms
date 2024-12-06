@@ -30,7 +30,7 @@ fn main() {
 
 fn fast_activate() {
     let ver = WinVer::get_by_index(0).unwrap();
-    let server = SERVER{ip: "kdavp.mooo.com".to_string()};
+    let server = SERVER{ip: "kms.loli.best".to_string()};
 
     match activate(&ver, &server) {
         Ok(_) => (),
