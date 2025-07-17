@@ -1,53 +1,44 @@
-use auto_kms::{activate, has_admin_privileges, pretty_input, pretty_print, SERVER, WinVer};
+use auto_kms::activate;
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
+use serde::{Deserialize, Serialize};
 
+use crate::is_elevated::is_elevated;
+mod is_elevated;
 
-fn print_menu() {
-    let term = console::Term::stdout();
-    term.clear_screen().expect("Не удалось очистить консоль");
-    pretty_print("Auto KMS\n\n", 5);
-    pretty_print("1. Activate windows\n", 5);
-    pretty_print("2. Fast activate windows [10/11 Pro]\n", 5);
-    pretty_print("3. Exit\n\n", 5);
+#[derive(Serialize, Deserialize)]
+struct Versions {
+    versions: Vec<Version>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Version {
+    name: String,
+    key: String,
 }
 
 fn main() {
-    if !has_admin_privileges() {
-        pretty_input("Restart the program with administrator rights", 20);
+    if !is_elevated() {
+        eprintln!("Restart the program with administrator rights");
+        Confirm::new().interact().unwrap();
         return;
     }
-    loop {
-        print_menu();
-        match pretty_input("Select: ", 5).trim() {
-            "1" => {activate_windows();}
-            "2" => {fast_activate();}
-            "3" => {return;}
-            _ => {
 
-            }
-        }
-    }
-}
+    let config_str = include_str!("../keys.json");
+    let versions: Versions = serde_json::from_str(config_str).unwrap();
 
-fn fast_activate() {
-    let ver = WinVer::get_by_index(0).unwrap();
-    let server = SERVER{ip: "kms.loli.best".to_string()};
+    let options: Vec<String> = versions.versions.iter().map(|t| t.name.clone()).collect();
+    let selected = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Version")
+        .items(&options)
+        .interact()
+        .unwrap();
 
-    match activate(&ver, &server) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("{}", e)
-        },
-    };
-}
+    let server: String = Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("KMS Server")
+        .interact_text()
+        .unwrap();
 
-fn activate_windows() {
-    let ver = WinVer::get();
-    let server = SERVER::get();
+    activate(&versions.versions[selected].key, &server);
 
-    match activate(&ver, &server) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("{}", e)
-        },
-    };
+    Confirm::new().interact().unwrap();
 }
