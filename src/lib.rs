@@ -1,53 +1,62 @@
-use std::{io::Write, process::Command};
+use std::io::{self, Write};
+use std::process::{Command, Output};
 
 use dialoguer::Confirm;
 
-pub fn activate(key: &str, server: &str) {
-    print!("[/] Installing key: ");
-    std::io::stdout().flush().unwrap();
+fn run_slmgr(args: &[&str], description: &str) -> io::Result<bool> {
+    print!("[/] {}... ", description);
+    io::stdout().flush()?;
 
-    let ipk = Command::new("C:\\Windows\\System32\\cscript")
+    let output: Output = Command::new("C:\\Windows\\System32\\cscript")
+        .arg("//nologo")
         .arg("C:\\Windows\\System32\\slmgr.vbs")
-        .args(&["/ipk", key])
-        .output()
-        .unwrap();
+        .args(args)
+        .output()?;
 
-    if ipk.status.success() {
-        println!("success\n\n");
+    if output.status.success() {
+        println!("success\n");
+        Ok(true)
     } else {
-        println!(" Error: {:?}", ipk.status.code().unwrap());
-        Confirm::new().interact().unwrap();
-        return;
+        eprintln!(
+            "\n[!] Error: {}\n{}",
+            output.status.code().unwrap_or(-1),
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        Confirm::new()
+            .with_prompt("Continue anyway?")
+            .default(false)
+            .interact()
+            .unwrap_or(false);
+
+        Ok(false)
+    }
+}
+
+pub fn activate(key: &str, server: &str) -> io::Result<()> {
+    run_slmgr(&["/upk"], "Uninstalling existing product key")?;
+
+    if !run_slmgr(&["/ipk", key], &format!("Installing product key: {}", key))? {
+        return Ok(());
     }
 
-    print!("[/] Installing KMS Server: ");
-    std::io::stdout().flush().unwrap();
-    let skms = Command::new("C:\\Windows\\System32\\cscript")
-        .arg("C:\\Windows\\System32\\slmgr.vbs")
-        .args(&["/skms", server])
-        .output()
-        .unwrap();
-
-    if skms.status.success() {
-        println!("success\n\n");
-    } else {
-        println!("Error: {:?}", skms.status.code().unwrap());
-        Confirm::new().interact().unwrap();
-        return;
+    if !run_slmgr(
+        &["/skms", server],
+        &format!("Setting KMS server: {}", server),
+    )? {
+        return Ok(());
     }
 
-    print!("[/] Activating windows: ");
-    std::io::stdout().flush().unwrap();
-
-    let ato = Command::new("C:\\Windows\\System32\\cscript")
-        .arg("C:\\Windows\\System32\\slmgr.vbs")
-        .args(&["/ato"])
-        .output()
-        .unwrap();
-
-    if ato.status.success() {
-        println!("Complete");
-    } else {
-        println!("Error: {:?}", ato.status.code().unwrap());
+    if !run_slmgr(&["/ato"], "Activating Windows")? {
+        return Ok(());
     }
+
+    Command::new("C:\\Windows\\System32\\cscript")
+        .arg("C:\\Windows\\System32\\slmgr.vbs")
+        .arg("/dlv")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Ok(())
 }
